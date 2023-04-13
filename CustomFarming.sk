@@ -1,0 +1,111 @@
+# Made by ShingasPT #
+
+options:
+    basePrice: 500
+    priceOffset: 1.025 #2.5% Expensier Every Purchase
+    tokenOffset: 1.75 #75% Higher Amount of Tokens
+
+command farmer:
+    trigger:
+        set {_farmerTool} to wooden hoe named "&6Farming Tool &8&l| &7(&f1&7)"
+        set int tag "Custom;Farmer" of nbt of {_farmerTool} to 1
+        set int tag "Custom;Level" of nbt of {_farmerTool} to 1
+        set int tag "Custom;Upgrade" of nbt of {_farmerTool} to 500
+        set tag "Custom;Owner" of nbt of {_farmerTool} to uuid of player
+        give player 1 of {_farmerTool}
+
+command tokens [<offlineplayer>]:
+    aliases: tks, tk, token
+    trigger:
+        send "&eYour tokens: &f%{tokens::%uuid of player%}%" if arg-1 is not set else "&e%arg-1%'s Tokens: &f%{tokens::%uuid of arg-1%}%"
+
+on break:
+    int tag "Custom;Farmer" of nbt of tool = 1
+    if blockdata tag "age" of event-block = 3:
+        if "%type of event-block%" does not contain ("beetroot"):
+            cancel event
+            stop
+        set {_age} to 3
+    else:
+        if blockdata tag "age" of event-block != 7:
+            cancel event
+            stop
+        set {_age} to 7
+    clear drops
+    #giveDrop(player, type of event-block)
+    addTokens(player, calcTokenGain((int tag "Custom;Level" of nbt of tool)))
+    replenishCrop(event-block, {_age}, 5 ticks)
+
+on block trample:
+    cancel event
+
+on right click:
+    int tag "Custom;Farmer" of nbt of tool = 1
+    player is sneaking
+    set {_lvl} to tag "Custom;Level" of nbt of tool
+    set {_gui} to dropper inventory named "Tool Upgrade"
+    set {_upg} to "&eUpgrade Price &8&l| &f%calcUpgrade(player)%" if {_lvl} != 250 else "&eUpgrade Price &8&l| &fMAX"
+    set slot 4 of {_gui} to paper named "&6&lLevel" with lore "" and "&eCurrent Level &8&l| &f%{_lvl}%" and {_upg}
+    open {_gui} to player
+
+on inventory click:
+    name of event-inventory contains "Tool Upgrade"
+    cancel event
+    if index of event-slot = 4:
+        set {_price} to calcUpgrade(player)
+        if buyUpgrade(player) = "true":
+            set {_lvl} to int tag "Custom;Level" of nbt of (tool of player)
+            set {_upg} to "&eUpgrade Price &8&l| &f%calcUpgrade(player)%" if {_lvl} != 250 else "&eUpgrade Price &8&l| &fMAX"
+            set lore of event-slot to ("" and "&eCurrent Level &8&l| &f%{_lvl}%" and {_upg})
+            set name of (tool of player) to "&6Farming Tool &8&l| &7(&f%{_lvl}%&7)"
+            send "&aSuccessfully upgraded tool to level %{_lvl}% for %{_price}% tokens!"
+        else if buyUpgrade(player) = "false":
+            send "&cYou do not have enough funds for this purchase!"
+        else:
+            send "&6You have reached max level on your farming tool!"
+
+on pickup:
+    int tag "Custom;Farmer" of nbt of tool = 1
+    cancel event if uuid of player != tag "Custom;Owner" of nbt of event-item
+
+function addTokens(p: player, gain: integer):
+    add {_gain} to {tokens::%uuid of {_p}%}
+    send action bar "&e+%{_gain}% &6Tokens " to {_p}
+
+function giveDrop(p: player, t: itemtype):
+    set {_type} to "%{_t}%"
+    replace all "ripe " in {_type} with ""
+    replace all " plant" in {_type} with ""
+    give {_p} 1 of ({_type} parsed as itemtype)
+
+function calcTokenGain(lvl: integer) :: integer:
+    set {_min} to {_lvl}
+    set {_max} to {_min} + ({_lvl} * {@tokenOffset})
+    return (random integer between {_min} and {_max})
+
+function calcUpgrade(p: player) :: integer:
+    set {_base} to int tag "Custom;Upgrade" of nbt of (tool of {_p})
+    return {_base} if int tag "Custom;Level" of nbt of (tool of {_p}) = 1
+    set {_upg} to ({_base} * {@priceOffset})
+    return {_upg}
+
+function replenishCrop(block: block, age: integer, delay: timespan):
+    set blockdata tag "age" of {_block} to 0
+    set {_} to 1
+    loop {_age} times:
+        wait {_delay}
+        set blockdata tag "age" of {_block} to {_}
+        add 1 to {_}
+
+function buyUpgrade(p: player) :: string:
+    set {_price} to int tag "Custom;Upgrade" of nbt of (tool of {_p})
+    set {_tokens} to {tokens::%uuid of {_p}%}
+    set {_lvl} to int tag "Custom;Level" of nbt of (tool of {_p})
+    return "false" if {_price} > {_tokens}
+    if {_lvl} = 250:
+        return "max"
+    remove {_price} from {tokens::%uuid of {_p}%}
+    add 1 to {_lvl}
+    set int tag "Custom;Level" of nbt of (tool of {_p}) to {_lvl}
+    set int tag "Custom;Upgrade" of nbt of (tool of {_p}) to calcUpgrade({_p})
+    return "true"
