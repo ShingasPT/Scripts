@@ -1,0 +1,44 @@
+on load:
+
+    #Mob Types
+    set {-mobs::type::husk::hp} to 50
+    set {-mobs::type::skeleton::hp} to 100
+    set {-mobs::type::zombie::hp} to 250
+
+    #Mob Names
+    set {-mobs::type::husk::name} to "Husky"
+    set {-mobs::type::skeleton::name} to "Skelly"
+    set {-mobs::type::zombie::name} to "Zomby"
+
+    #Spawn Chances
+    set {-mobs::type::husk::chance} to 70
+    set {-mobs::type::skeleton::chance} to 20
+    set {-mobs::type::zombie::chance} to 10
+
+    #Mob's Damages (Hearts)
+    set {-mobs::type::husk::dmg} to 1
+    set {-mobs::type::skeleton::dmg} to 1.5
+    set {-mobs::type::zombie::dmg} to 2
+
+    #Locations for Mob Spawns
+    #set {-mobs::type::husk::spawns} to 
+    #set {-mobs::type::skeleton::spawns} to 
+    #set {-mobs::type::zombie::spawns} to 
+
+    #Mob Levels for HP Multiplier
+    set {-mobs::level::1} to 1.2
+    set {-mobs::level::2} to 1.5
+    set {-mobs::level::3} to 2
+
+command spawnTest <entity type>:
+    trigger:
+        spawn 1 of arg-1 at location of player
+        set {_e} to last spawned arg-1
+        if {-mobs::type::%arg-1%} is set:
+            set max health of {_e} to {-mobs::type::%arg-1%::hp}
+            set health of {_e} to {-mobs::type::%arg-1%::hp}
+            set display name of {_e} to {-mobs::type::%arg-1%::name}
+
+on damage of player:
+    {-mobs::type::%type of attacker%} is set
+    set damage to {-mobs::type::%type of attacker%::dmg}
