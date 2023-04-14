@@ -1,0 +1,27 @@
+command /gmc:
+    permission: op
+    trigger:
+        set gamemode of player to creative
+
+command /gms:
+    permission: op
+    trigger:
+        set gamemode of player to survival
+
+command /gma:
+    permission: op
+    trigger:
+        set gamemode of player to adventure
+
+command /gmsp:
+    permission: op
+    trigger:
+        set gamemode of player to spectator
+
+on command:
+    command contains "gm"
+    set {_gm} to gamemode of player
+    wait 1 tick
+    stop if gamemode of player = {_gm}
+    set {_gm} to "%gamemode of player%"
+    send "Your gamemode has been updated to %{_gm} in strict proper case% Mode"
