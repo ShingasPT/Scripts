@@ -1,4 +1,4 @@
-on script load:
+on load:
 
     broadcast "Loading mobs..."
 
@@ -6,59 +6,93 @@ on script load:
     set {-mobs::type::husk::name} to "Husky"
     set {-mobs::type::husk::hp} to 50
     set {-mobs::type::husk::dmg} to 1
-    #set {-mobs::type::husk::spawns} to 
+    #set {-mobs::type::husk::spawns::*} to 
 
     #Mob 2
     set {-mobs::type::skeleton::name} to "Skelly"
     set {-mobs::type::skeleton::hp} to 100
     set {-mobs::type::skeleton::dmg} to 1.5
-    #set {-mobs::type::skeleton::spawns} to 
+    #set {-mobs::type::skeleton::spawns::*} to 
 
     #Mob 3
     set {-mobs::type::zombie::name} to "Zomby"
     set {-mobs::type::zombie::hp} to 250
     set {-mobs::type::zombie::dmg} to 2
-    #set {-mobs::type::zombie::spawns} to 
+    #set {-mobs::type::zombie::spawns::*} to 
     
     #Mob Levels for HP Multiplier
-    set {-mobs::level::1} to 1.2
-    set {-mobs::level::2} to 1.5
-    set {-mobs::level::3} to 2
+    set {-mobs::level::1} to 1.2 #20% More Damage
+    set {-mobs::level::2} to 1.5 #50% More Damage
+    set {-mobs::level::3} to 2 #100% More Damage
 
     broadcast "Successfully loaded mobs!"
 
-command test <string>:
+    broadcast "Loading custom armor..."
+
+    set {-customArmor::leather::dmgDebuff} to 0.2 #20% Less Damage
+    set {-customArmor::gold::dmgDebuff} to 0.4 #40% Less Damage
+    set {-customArmor::diamond::dmgDebuff} to 0.6 #60% Less Damage
+
+    broadcast "Successfully loaded custom armor!"
+
+command spawnMob <string>:
     trigger:
-        spawn 1 of (arg-1 parsed as entity type) at player
+        if {-mobs::type::%arg-1%} is not set:
+            send "This custom mob does not exist!"
+            send "Existing Types: %nl% %{-mobs::type::*}%"
+            stop
+        spawnMob(arg-1, location of player)
+
+command getCustomArmor <string>:
+    trigger:
+        if {-customArmor::%arg-1%} is not set:
+            send "This armor does not exist!"
+            send "Existing Types: %nl% %{-customArmor::*}%"
+            stop
+        set {_armor} to ("%arg-1% chestplate") parsed as item type
+        set tag "custom;DamageDebuff" of nbt of {_armor} to {-customArmor::%arg-1%::dmgDebuff}
+        set name of {_armor} to "&7%arg-1% Chestplate"
+        set lore of {_armor} to "%nl%&7Damage Debuff &8» &f%(tag "custom;DamageDebuff" of nbt of {_armor}) * 100%"
+        give player 1 of {_armor}
+
+every 5 minutes:
+    loop {-mobs::type::*}:
+        {-mobs::type::%loop-value%::spawns::*} is set
+        spawnMob(loop-value, {-mobs::type::%loop-value%::spawns::*})
+
+on damage of player:
+    tag "custom;Type" of nbt of attacker is set
+    if tag "custom;DamageDebuff" of nbt of (chestplate of player) is not set:
+        set {_dmg} to {-mobs::type::%type of attacker%::dmg}
+    else:
+        set {_dmg} to ({-mobs::type::%type of attacker%::dmg} * (tag "custom;DamageDebuff" of nbt of (chestplate of player)))
+    set damage to {_dmg}
+
+on damage of mob:
+    tag "custom;Type" of nbt of victim is set
+    wait 1 tick
+    set display name of victim to "&7%{-mobs::type::%tag ""custom;Type"" of nbt of victim%::name}% &r[&6%int tag "custom;Level" of nbt of victim%&r] &8| &c%health of victim%&7/&c%max health of victim%"
+
+on death of mob:
+    tag "custom;Type" of nbt of victim is set
+    clear drops
+    attacker is a player
+    add 1 to {tokens::%uuid of attacker%}
+    #Add tokens
+
+function spawnMob(type: string, locs: locations):
+    loop {_locs::*}:
+        spawn 1 of ({_type} parsed as entity type) at loop-value
         set {_e} to last spawned entity
-        set {_lvl} to getMobLevel()
-        set {_hp} to ({-mobs::type::%arg-1%::hp} * {-mobs::level::%{_lvl}%})
-        set int tag "custom;CustomID" of nbt of {_e} to (size of {-mobs::spawned::*} + 1)
+        set {_lvl} to getRandMobLevel()
+        set {_hp} to ({-mobs::type::%{_type}%::hp} * {-mobs::level::%{_lvl}%})
         set int tag "custom;Level" of nbt of {_e} to {_lvl}
         set tag "custom;Type" of nbt of {_e} to arg-1
         set max health of {_e} to {_hp}
         set health of {_e} to {_hp}
-        set display name of {_e} to "&7%{-mobs::type::%arg-1%::name}% &r[&6%{_lvl}%&r] &8| &c%health of {_e}%&7/&c%max health of {_e}%"
-        add last spawned entity to {-mobs::spawned::*}
+        set display name of {_e} to "&7%{-mobs::type::%{_type}%::name}% &r[&6%{_lvl}%&r] &8| &c%health of {_e}%&7/&c%max health of {_e}%"
 
-on damage of player:
-    tag "CustomID" of nbt of attacker is set
-    set damage to {-mobs::type::%type of attacker%::dmg}
-
-on damage of mob:
-    int tag "CustomID" of nbt of victim is set
-    wait 3 tick
-    set display name of victim to "&7%{-mobs::type::%tag ""custom;Type"" of nbt of victim%::name}% &r[&6%int tag "custom;Level" of nbt of victim%&r] &8| &c%health of victim%&7/&c%max health of victim%"
-
-on death of mob:
-    int tag "CustomID" of nbt of victim is set
-    clear drops
-    attacker is a player
-    add 1 to {mobKills::%uuid of attacker%}
-    send action bar "&a+1 &6Points?" to attacker
-
-
-function getMobLevel() :: integer:
+function getRandMobLevel() :: integer:
     set {_chance} to random integer between 1 and 100
     if {_chance} is between 1 and 10:
         return 3
