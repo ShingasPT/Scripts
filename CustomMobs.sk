@@ -37,7 +37,7 @@ on load:
 
 command spawnMob <string>:
     trigger:
-        if {-mobs::type::%arg-1%} is not set:
+        if {-mobs::type::*} does not contain arg-1:
             send "This custom mob does not exist!"
             send "Existing Types: %nl% %{-mobs::type::*}%"
             stop
@@ -45,7 +45,7 @@ command spawnMob <string>:
 
 command getCustomArmor <string>:
     trigger:
-        if {-customArmor::%arg-1%} is not set:
+        if {-customArmor::*} does not contain arg-1:
             send "This armor does not exist!"
             send "Existing Types: %nl% %{-customArmor::*}%"
             stop
