@@ -62,7 +62,7 @@ every 5 minutes:
 
 on damage of player:
     tag "custom;Type" of nbt of attacker is set
-    if tag "custom;DamageDebuff" of nbt of (chestplate of player) is not set:
+    if tag "custom;DamageDebuff" of nbt of (chestplate of victim) is not set:
         set {_dmg} to {-mobs::type::%type of attacker%::dmg}
     else:
         set {_dmg} to ({-mobs::type::%type of attacker%::dmg} * (tag "custom;DamageDebuff" of nbt of (chestplate of player)))
@@ -87,7 +87,7 @@ function spawnMob(type: string, locs: locations):
         set {_lvl} to getRandMobLevel()
         set {_hp} to ({-mobs::type::%{_type}%::hp} * {-mobs::level::%{_lvl}%})
         set int tag "custom;Level" of nbt of {_e} to {_lvl}
-        set tag "custom;Type" of nbt of {_e} to arg-1
+        set tag "custom;Type" of nbt of {_e} to {_type}
         set max health of {_e} to {_hp}
         set health of {_e} to {_hp}
         set display name of {_e} to "&7%{-mobs::type::%{_type}%::name}% &r[&6%{_lvl}%&r] &8| &c%health of {_e}%&7/&c%max health of {_e}%"
