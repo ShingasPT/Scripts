@@ -37,22 +37,22 @@ on load:
 
 command spawnMob <string>:
     trigger:
-        if {-mobs::type::*} does not contain arg-1:
+        if indices of {-mobs::type::*} does not contain arg-1:
             send "This custom mob does not exist!"
-            send "Existing Types: %nl% %{-mobs::type::*}%"
+            send "Existing Types: %nl% %indices of {-mobs::type::*}%"
             stop
         spawnMob(arg-1, location of player)
 
 command getCustomArmor <string>:
     trigger:
-        if {-customArmor::*} does not contain arg-1:
+        if indices of {-customArmor::*} does not contain arg-1:
             send "This armor does not exist!"
-            send "Existing Types: %nl% %{-customArmor::*}%"
+            send "Existing Types: %nl% %indices of {-customArmor::*}%"
             stop
         set {_armor} to ("%arg-1% chestplate") parsed as item type
         set tag "custom;DamageDebuff" of nbt of {_armor} to {-customArmor::%arg-1%::dmgDebuff}
-        set name of {_armor} to "&7%arg-1% Chestplate"
-        set lore of {_armor} to "%nl%&7Damage Debuff &8» &f%(tag "custom;DamageDebuff" of nbt of {_armor}) * 100%"
+        set name of {_armor} to "&7%arg-1 in strict proper case% Chestplate"
+        set lore of {_armor} to "%nl%&7Damage Debuff &8» &f%(tag "custom;DamageDebuff" of nbt of {_armor}) * 100%%%"
         give player 1 of {_armor}
 
 every 5 minutes:
