@@ -65,7 +65,7 @@ on damage of player:
     if tag "custom;DamageDebuff" of nbt of (chestplate of victim) is not set:
         set {_dmg} to {-mobs::type::%type of attacker%::dmg}
     else:
-        set {_dmg} to ({-mobs::type::%type of attacker%::dmg} * (tag "custom;DamageDebuff" of nbt of (chestplate of player)))
+        set {_dmg} to ({-mobs::type::%type of attacker%::dmg} * (tag "custom;DamageDebuff" of nbt of (chestplate of victim)))
     set damage to {_dmg}
 
 on damage of mob:
