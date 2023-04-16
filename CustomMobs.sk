@@ -82,15 +82,14 @@ on death of mob:
 
 function spawnMob(type: string, locs: locations):
     loop {_locs::*}:
-        spawn 1 of ({_type} parsed as entity type) at loop-value
-        set {_e} to last spawned entity
         set {_lvl} to getRandMobLevel()
         set {_hp} to ({-mobs::type::%{_type}%::hp} * {-mobs::level::%{_lvl}%})
-        set int tag "custom;Level" of nbt of {_e} to {_lvl}
-        set tag "custom;Type" of nbt of {_e} to {_type}
-        set max health of {_e} to {_hp}
-        set health of {_e} to {_hp}
-        set display name of {_e} to "&7%{-mobs::type::%{_type}%::name}% &r[&6%{_lvl}%&r] &8| &c%health of {_e}%&7/&c%max health of {_e}%"
+        spawn 1 of ({_type} parsed as entity type) at loop-value:
+            set int tag "custom;Level" of nbt of entity to {_lvl}
+            set tag "custom;Type" of nbt of entity to {_type}
+            set max health of entity to {_hp}
+            set health of entity to {_hp}
+            set display name of entity to "&7%{-mobs::type::%{_type}%::name}% &r[&6%{_lvl}%&r] &8| &c%health of entity%&7/&c%max health of entity%"
 
 function getRandMobLevel() :: integer:
     set {_chance} to random integer between 1 and 100
