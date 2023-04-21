@@ -1,0 +1,13 @@
+command leaderboard:
+    aliases: lb
+    trigger:
+        set {_sorted::*} to sort((indices of {tokens::*}), {tokens::*})
+        send "&6Token Leaderboard"
+        loop {_sorted::*}:
+            send "  &8» &r%loop-value parsed as offline player% &7| &e%{tokens::%loop-value%}% Tokens"
+            exit loop if loop-index = "10"
+
+function sort(indices: strings, values: numbers, descending: boolean = true) :: strings:
+    loop {_indices::*}:
+        set {_sort::%{_values::%loop-index%}%.%loop-index%} to loop-value
+    return (reversed {_sort::*}) if {_descending} is true, else {_sort::*}
